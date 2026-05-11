@@ -13,9 +13,11 @@ fehlende Binary den Loop nicht abreissen laesst.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
 import platform
+import re
 import shutil
 import socket
 from datetime import UTC, datetime
@@ -27,6 +29,20 @@ from .config import SpokeAgentConfig
 from .models import DiscoverySnapshot, GpuInfo, HostInfo, ServiceInfo
 
 log = logging.getLogger(__name__)
+
+
+async def _communicate_with_timeout(
+    proc: asyncio.subprocess.Process,
+    timeout: float,
+) -> tuple[bytes, bytes]:
+    try:
+        return await asyncio.wait_for(proc.communicate(), timeout=timeout)
+    except TimeoutError:
+        with contextlib.suppress(ProcessLookupError):
+            proc.kill()
+        with contextlib.suppress(Exception):
+            await proc.wait()
+        raise
 
 
 # ----------------------------- GPU ----------------------------------------
@@ -93,7 +109,7 @@ async def _detect_rocm() -> GpuInfo | None:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            out, _err = await asyncio.wait_for(proc.communicate(), timeout=3.0)
+            out, _err = await _communicate_with_timeout(proc, timeout=3.0)
             if proc.returncode == 0:
                 try:
                     data = json.loads(out.decode("utf-8", errors="replace") or "{}")
@@ -122,13 +138,12 @@ async def _detect_rocm() -> GpuInfo | None:
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        out, _err = await asyncio.wait_for(proc.communicate(), timeout=3.0)
+        out, _err = await _communicate_with_timeout(proc, timeout=3.0)
     except (TimeoutError, FileNotFoundError, OSError):
         return None
     text = out.decode("utf-8", errors="replace") if out else ""
     if "gfx" not in text:
         return None
-    import re
     gfx_match = re.search(r"gfx[0-9]+", text)
     name_match = re.search(r"Marketing Name:\s*(.+)", text)
     gfx = gfx_match.group(0) if gfx_match else None
