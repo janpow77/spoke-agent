@@ -36,7 +36,10 @@ async def detect_gpu() -> GpuInfo | None:
     """Liefert einen GPU-Snapshot oder ``None`` wenn keine GPU verfuegbar."""
     system = platform.system()
     if system == "Linux":
-        return await _detect_nvidia()
+        nv = await _detect_nvidia()
+        if nv is not None:
+            return nv
+        return await _detect_rocm()
     if system == "Darwin":
         return await _detect_apple_metal()
     return None
@@ -74,6 +77,63 @@ async def _detect_nvidia() -> GpuInfo | None:
         )
     except (ValueError, IndexError):
         return None
+
+
+async def _detect_rocm() -> GpuInfo | None:
+    """Detection fuer AMD-GPUs mit ROCm.
+
+    Bevorzugt rocm-smi (gibt VRAM-Daten als JSON aus). Fallback rocminfo
+    (nur Name + gfx-Version, ohne VRAM-Util). Auf APUs wie Strix Halo
+    ist VRAM-Total = shared system RAM Anteil — wir reporten was ROCm sagt.
+    """
+    if shutil.which("rocm-smi"):
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                "rocm-smi", "--showmeminfo", "vram", "--showuse", "--json",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            out, _err = await asyncio.wait_for(proc.communicate(), timeout=3.0)
+            if proc.returncode == 0:
+                try:
+                    data = json.loads(out.decode("utf-8", errors="replace") or "{}")
+                    cards = [v for k, v in data.items() if k.startswith("card")]
+                    if cards:
+                        first = cards[0]
+                        vram_total = first.get("VRAM Total Memory (B)") or first.get("vram_total")
+                        vram_used = first.get("VRAM Total Used Memory (B)") or first.get("vram_used")
+                        util = first.get("GPU use (%)") or first.get("util_pct") or 0
+                        return GpuInfo(
+                            device=str(first.get("Card series") or first.get("name") or "AMD GPU"),
+                            vram_total_mb=int(int(vram_total) / (1024 * 1024)) if vram_total else None,
+                            vram_used_mb=int(int(vram_used) / (1024 * 1024)) if vram_used else None,
+                            util_pct=float(util) if util else 0.0,
+                        )
+                except (json.JSONDecodeError, ValueError, KeyError, IndexError) as exc:
+                    log.debug("rocm-smi json parse failed: %s", exc)
+        except (TimeoutError, FileNotFoundError, OSError) as exc:
+            log.debug("rocm-smi not runnable: %s", exc)
+    # Fallback: rocminfo gives at least name + gfx-version, no VRAM
+    if not shutil.which("rocminfo"):
+        return None
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            "rocminfo",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        out, _err = await asyncio.wait_for(proc.communicate(), timeout=3.0)
+    except (TimeoutError, FileNotFoundError, OSError):
+        return None
+    text = out.decode("utf-8", errors="replace") if out else ""
+    if "gfx" not in text:
+        return None
+    import re
+    gfx_match = re.search(r"gfx[0-9]+", text)
+    name_match = re.search(r"Marketing Name:\s*(.+)", text)
+    gfx = gfx_match.group(0) if gfx_match else None
+    name = name_match.group(1).strip() if name_match else (f"AMD {gfx}" if gfx else "AMD GPU")
+    return GpuInfo(device=name)
 
 
 async def _detect_apple_metal() -> GpuInfo | None:
