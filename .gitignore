@@ -1,8 +1,37 @@
-.venv/
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+
+# Pytest / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Node / Vite
 node_modules/
 dist/
-.pytest_cache/
-.ruff_cache/
-*.egg-info/
+frontend/dist/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS
+.DS_Store
+
+# Build artefacts
+*.egg
+*.whl
+
+# Local state
+state.json
+config-overrides.json
