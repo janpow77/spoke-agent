@@ -43,7 +43,11 @@ def _payload_from_snapshot(
     return SpokeRegisterPayload(
         name=cfg.spoke_name,
         base_url=base_url,
-        type="spoke-agent",
+        # Router-Schema akzeptiert nur 'ollama'|'openai'|'gpu-llm-manager'|'paddle-ocr'|'custom'.
+        # Da spoke-agent ein Multi-Capability-Aggregator ist (ollama + reranker + vision),
+        # melden wir uns als 'gpu-llm-manager' (ist semantisch am naehesten an einem
+        # Lifecycle-Aggregator).
+        type="gpu-llm-manager",
         capabilities=snapshot.capabilities,
         tags=cfg.spoke_tags,
         priority=100,
