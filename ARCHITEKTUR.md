@@ -47,6 +47,12 @@ _Hohe Zentralität ist nicht automatisch ein Defekt (zentrale Stores/Modelle sin
 - `detect_gpu() (src/spoke_agent/discovery.py)` — Betweenness 0.001
 - `registration_loop() (src/spoke_agent/registration.py)` — Betweenness 0.001
 
+## Empfohlene Spezialisten
+
+Passend zu Stack/Domäne dieses Projekts (Claude-Code-Agents/Skills):
+
+`/deutsche-formulierung`, `@git-workflow`, `/auto-verify`, `/rag-knowledge-base`, `@code-audit-expert`, `@code-api-checker`, `@docker-proxy-debugger`, `/docker-debug`, `/cross-project-health`, `@e2e-browser-tester`, `/modern-gui-builder`, `/ux-completeness-check`, `/vue3-gui-builder`, `@memory-bridge`.
+
 ## Hinweis für Änderungen
 
 Vor dem Ändern eines zentralen Bausteins die Abhängigen prüfen — am schnellsten über den **graphify-MCP** (globaler Graph): „Was hängt an `<datei>`?". Brücken-Knoten stabil halten.
