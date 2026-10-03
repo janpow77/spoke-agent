@@ -1,6 +1,6 @@
 # spoke-agent
 
-Pro-Host-Agent für das LLM-Router-Tailnet (NUC, evo-x2, Desktop, MacBook). Entdeckt lokal laufende ML-Services (ollama, reranker-service, vision-service) per HTTP-Probe, registriert den Host als Spoke beim zentralen `llm-router` (mit 30-s-Heartbeat) und bietet eine Admin-UI für `docker compose`-Operationen über den gemounteten Docker-Socket.
+Pro-Host-Agent für das LLM-Router-Verbund (GPU-Server, Desktop, Laptop). Entdeckt lokal laufende ML-Services (ollama, reranker-service, vision-service) per HTTP-Probe, registriert den Host als Spoke beim zentralen `llm-router` (mit 30-s-Heartbeat) und bietet eine Admin-UI für `docker compose`-Operationen über den gemounteten Docker-Socket.
 
 ## Tech-Stack
 
@@ -9,7 +9,7 @@ Pro-Host-Agent für das LLM-Router-Tailnet (NUC, evo-x2, Desktop, MacBook). Entd
 - **Service-Discovery (Default-Ports):** ollama `:11434`, reranker-service `:8004`, vision-service `:8005`.
 - **Agent-Port:** `:7844` (Backend + Admin-UI). Frontend-Dev-Server: `:5182` (Proxy `/api` + `/health` → `:7844`).
 - **Container:** Multi-Stage Dockerfile (node:20-alpine Frontend-Build → python:3.12-slim Runtime mit `docker-ce-cli` + `docker-compose-plugin`, tini als Entrypoint). Image: `ghcr.io/janpow77/spoke-agent`.
-- **Externe Abhängigkeiten:** zentraler `llm-router` (Default `http://100.99.159.80:8080`); Docker-Operationen über gemounteten `/var/run/docker.sock`. Volle Compose-Konfig liegt im separaten Repo `spoke-stack`.
+- **Externe Abhängigkeiten:** zentraler `llm-router` (Port `7842`; Code-Default `http://localhost:7842`, im Betrieb per `ROUTER_URL` setzen); Docker-Operationen über gemounteten `/var/run/docker.sock`. Volle Compose-Konfig liegt im separaten Repo `spoke-stack`.
 
 ## Setup & Befehle
 

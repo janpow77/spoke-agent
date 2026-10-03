@@ -2,6 +2,7 @@
 
 [![Image Build & Push (GHCR)](https://github.com/janpow77/spoke-agent/actions/workflows/image.yml/badge.svg)](https://github.com/janpow77/spoke-agent/actions/workflows/image.yml)
 ![Python](https://img.shields.io/badge/python-%E2%89%A53.12-blue)
+[![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-green)](LICENSE)
 
 **Agent, der auf jedem Rechner eines LLM-Router-Verbunds läuft: Er findet die lokalen ML-Dienste (Ollama, Reranker, Vision), meldet den Rechner als Spoke beim zentralen [`llm-router`](https://github.com/janpow77/llm-router) an und bietet eine Admin-Oberfläche für die zugehörigen Docker-Container.**
 
@@ -63,7 +64,7 @@ Als Container (Image aus der CI: `ghcr.io/janpow77/spoke-agent`):
 docker build -t spoke-agent .
 docker run -d -p 7844:7844 \
   -v /var/run/docker.sock:/var/run/docker.sock:ro \
-  -e ROUTER_URL=http://<router>:8080 -e SPOKE_AGENT_ADMIN_PASSWORD=<passwort> \
+  -e ROUTER_URL=http://<router-host>:7842 -e SPOKE_AGENT_ADMIN_PASSWORD=<passwort> \
   spoke-agent
 ```
 
@@ -78,7 +79,7 @@ Die Konfiguration kommt ausschließlich aus Umgebungsvariablen (Vorlage: [`.env.
 | `SPOKE_NAME` | `$HOSTNAME` | Name des Spokes im Router |
 | `SPOKE_TAGS` | leer | Tags, kommagetrennt (z. B. `gpu,linux`) |
 | `APP_ID` | leer | optionale App-ID für den Router |
-| `ROUTER_URL` | interne Adresse <!-- TODO: Code-Default in config.py ist eine private Netzadresse; für eigenen Betrieb immer setzen --> | Primärer Router |
+| `ROUTER_URL` | `http://localhost:7842` | Primärer Router; im Betrieb immer auf die Router-Adresse setzen |
 | `FALLBACK_ROUTER_URL` | — | Ausweich-Router nach 3 Fehlschlägen in Folge |
 | `API_KEY` | — | Bearer-Token für Aufrufe an den Router |
 | `SPOKE_REGISTRATION_TOKEN` | — | Header `X-Spoke-Token` bei der Registrierung |
@@ -146,5 +147,4 @@ Verwandte Repos: [spoke-stack](https://github.com/janpow77/spoke-stack) · [spok
 
 ## Lizenz
 
-<!-- TODO: Keine LICENSE-Datei im Repo; pyproject.toml nennt "Proprietary". -->
-Keine Lizenzdatei vorhanden; `pyproject.toml` weist das Paket als proprietär aus.
+Veröffentlicht unter der [MIT-Lizenz](LICENSE).

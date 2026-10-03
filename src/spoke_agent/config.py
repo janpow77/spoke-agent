@@ -56,7 +56,7 @@ class SpokeAgentConfig:
     app_id: str = ""  # Optional — Router referenziert intern app_id
 
     # --- Router-Anbindung ---
-    router_url: str = "http://100.99.159.80:8080"
+    router_url: str = "http://localhost:7842"
     fallback_router_url: str | None = None
     api_key: str = ""
     registration_token: str = ""
@@ -91,7 +91,7 @@ def _split_csv(value: str) -> list[str]:
 def load_config() -> SpokeAgentConfig:
     """Sammelt Konfiguration aus ENV.
 
-    Auf MacBook / NUC / evo-x2 / Desktop laeuft alles via Compose und ENV-File,
+    Auf jedem Spoke-Host laeuft alles via Compose und ENV-File,
     deshalb gibt es keine YAML-Datei. Persistente Aenderungen am Router-URL/
     API-Key macht die Admin-UI ueber den ``config_store``.
     """
